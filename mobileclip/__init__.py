@@ -2,6 +2,16 @@
 # For licensing see accompanying LICENSE file.
 # Copyright (C) 2024 Apple Inc. All Rights Reserved.
 #
+
+#
+# Edited by M. Sato March 2025
+#    - Added root_dir as optional input to create_model_and_transforms and get_tokenizer
+#      to allow for the user to specify the root directory for the model configs.
+#      This is important if using this code in ROS with a ROS Launch file, since the 
+#      path to the root_dir may not match the true path.
+#
+
+
 import os
 import json
 from typing import Optional, Union, Tuple, Any
@@ -26,6 +36,7 @@ from mobileclip.modules.common.mobileone import reparameterize_model
 def create_model_and_transforms(
     model_name: str,
     pretrained: Optional[str] = None,
+    root_dir: Optional[str] = None,
     reparameterize: Optional[bool] = True,
     device: Union[str, torch.device] = "cpu",
 ) -> Tuple[nn.Module, Any, Any]:
@@ -34,6 +45,7 @@ def create_model_and_transforms(
 
     Args:
         model_name: Model name. Choose from ['mobileclip_s0', 'mobileclip_s1', 'mobileclip_s2', 'mobileclip_b']
+        root_dir: Root directory for model configs.
         pretrained: Location of pretrained checkpoint.
         reparameterize: When set to True, re-parameterizable branches get folded for faster inference.
         device: Device identifier for model placement.
@@ -42,7 +54,8 @@ def create_model_and_transforms(
         Tuple of instantiated model, and preprocessing transforms for inference.
     """
     # Config files
-    root_dir = os.path.dirname(os.path.abspath(__file__))
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.abspath(__file__))
     configs_dir = os.path.join(root_dir, "configs")
     model_cfg_file = os.path.join(configs_dir, model_name + ".json")
 
@@ -82,9 +95,10 @@ def create_model_and_transforms(
     return model, None, preprocess
 
 
-def get_tokenizer(model_name: str) -> nn.Module:
+def get_tokenizer(model_name: str, root_dir: Optional[str] = None) -> nn.Module:
     # Config files
-    root_dir = os.path.dirname(os.path.abspath(__file__))
+    if root_dir is None:
+        root_dir = os.path.dirname(os.path.abspath(__file__))
     configs_dir = os.path.join(root_dir, "configs")
     model_cfg_file = os.path.join(configs_dir, model_name + ".json")
 
